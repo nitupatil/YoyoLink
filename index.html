@@ -3,23 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YoyoLinks - Share, Discover & Track Links</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+    <title>YoyoLinks - Share & Discover Links</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --danger-color: #ea4335;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --card-bg: #fff;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --text-color: #f5f5f5;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        #app {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+        }
+
+        #linkForm {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        #linkForm input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #linkForm button {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .link-card {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+
+        .link-card h3 {
+            margin-bottom: 5px;
+        }
+
+        .link-card a {
+            color: var(--primary-color);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .link-card .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .link-card .actions button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .like-btn {
+            background-color: #e3f2fd;
+        }
+
+        .dislike-btn {
+            background-color: #ffebee;
+        }
+
+        .share-btn {
+            background-color: #e8f5e9;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+        }
+
+        #themeToggle {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            #linkForm {
+                flex-direction: column;
+            }
+            
+            .filter-options {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="app">
         <header>
             <h1>YoyoLinks</h1>
-            <div class="auth-buttons">
-                <button id="loginBtn">Login</button>
-                <button id="signupBtn">Sign Up</button>
-                <button id="logoutBtn" style="display:none">Logout</button>
-            </div>
         </header>
         
         <main>
@@ -33,11 +185,6 @@
             </section>
             
             <section id="linksSection">
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search links...">
-                    <button id="searchBtn">Search</button>
-                </div>
-                
                 <div class="filter-options">
                     <button class="filter-btn active" data-filter="trending">Trending Now</button>
                     <button class="filter-btn" data-filter="recent">Most Recent</button>
@@ -45,9 +192,8 @@
                 </div>
                 
                 <div id="linksContainer">
-                    <!-- Links will be dynamically inserted here by JavaScript -->
                     <div class="link-placeholder">
-                        <p>Loading links or no links available...</p>
+                        <p>No links available yet. Add one above!</p>
                     </div>
                 </div>
             </section>
@@ -55,14 +201,172 @@
         
         <footer>
             <button id="themeToggle">Toggle Dark Mode</button>
-            <p>Created by <span id="currentYear"></span></p>
+            <p>Created by You - <span id="currentYear"></span></p>
         </footer>
     </div>
-    
-    <script src="app.js"></script>
+
     <script>
-        // Display current year in footer
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        // Simple in-memory database for demo purposes
+        let linksDB = JSON.parse(localStorage.getItem('yoyolinks')) || [];
+        let currentFilter = 'trending';
+        
+        // DOM Elements
+        const linkForm = document.getElementById('linkForm');
+        const linksContainer = document.getElementById('linksContainer');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Load links
+            renderLinks();
+            
+            // Setup event listeners
+            linkForm.addEventListener('submit', handleAddLink);
+            
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderLinks();
+                });
+            });
+            
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Check for saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        });
+        
+        // Functions
+        function handleAddLink(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('linkTitle').value.trim();
+            const url = document.getElementById('linkUrl').value.trim();
+            
+            if (!title || !url) {
+                alert('Please fill in both fields');
+                return;
+            }
+            
+            // Create new link
+            const newLink = {
+                id: Date.now().toString(),
+                title,
+                url,
+                code: Math.floor(100000 + Math.random() * 900000), // 6-digit code
+                views: 0,
+                likes: 0,
+                dislikes: 0,
+                createdAt: new Date().toISOString(),
+                lastReactionTime: 0
+            };
+            
+            // Add to database
+            linksDB.push(newLink);
+            saveToLocalStorage();
+            
+            // Reset form and refresh view
+            linkForm.reset();
+            renderLinks();
+            
+            alert(`Link added! Share with code: ${newLink.code}`);
+        }
+        
+        function renderLinks() {
+            // Filter and sort links
+            let filteredLinks = [...linksDB];
+            
+            switch(currentFilter) {
+                case 'recent':
+                    filteredLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    break;
+                case 'popular':
+                    filteredLinks.sort((a, b) => b.likes - a.likes);
+                    break;
+                default: // trending
+                    filteredLinks.sort((a, b) => b.views - a.views);
+            }
+            
+            // Render links
+            if (filteredLinks.length === 0) {
+                linksContainer.innerHTML = '<div class="link-placeholder"><p>No links available yet. Add one above!</p></div>';
+                return;
+            }
+            
+            linksContainer.innerHTML = filteredLinks.map(link => `
+                <div class="link-card" data-id="${link.id}">
+                    <h3>${link.title}</h3>
+                    <p><a href="${link.url}" target="_blank" onclick="trackView('${link.id}')">${link.url}</a></p>
+                    <p>Code: ${link.code} | Views: ${link.views} | Likes: ${link.likes} | Dislikes: ${link.dislikes}</p>
+                    <div class="actions">
+                        <button class="like-btn" onclick="handleReaction('${link.id}', 'likes')">👍 Like</button>
+                        <button class="dislike-btn" onclick="handleReaction('${link.id}', 'dislikes')">👎 Dislike</button>
+                        <button class="share-btn" onclick="shareLink('${link.code}')">Share</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function trackView(linkId) {
+            const link = linksDB.find(l => l.id === linkId);
+            if (link) {
+                link.views++;
+                saveToLocalStorage();
+            }
+        }
+        
+        function handleReaction(linkId, type) {
+            const link = linksDB.find(l => l.id === linkId);
+            if (!link) return;
+            
+            const now = Date.now();
+            
+            // Simple 5-minute cooldown (stored per link for simplicity)
+            if (now - link.lastReactionTime < 300000) {
+                alert('You can only react once every 5 minutes');
+                return;
+            }
+            
+            link[type]++;
+            link.lastReactionTime = now;
+            saveToLocalStorage();
+            renderLinks();
+        }
+        
+        function shareLink(code) {
+            const url = `${window.location.origin}${window.location.pathname}?code=${code}`;
+            navigator.clipboard.writeText(url)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(() => prompt('Copy this link:', url));
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('yoyolinks', JSON.stringify(linksDB));
+        }
+        
+        // Check for shared code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedCode = urlParams.get('code');
+        if (sharedCode) {
+            const sharedLink = linksDB.find(l => l.code == sharedCode);
+            if (sharedLink) {
+                alert(`Shared Link: ${sharedLink.title}\n${sharedLink.url}`);
+            }
+        }
     </script>
 </body>
 </html>
