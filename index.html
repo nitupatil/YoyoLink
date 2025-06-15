@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,11 +60,6 @@
             z-index: 100;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-
         .logo {
             display: flex;
             align-items: center;
@@ -96,43 +91,6 @@
             .content {
                 grid-template-columns: 240px 1fr;
             }
-        }
-
-        .sidebar {
-            display: none;
-        }
-
-        @media (min-width: 800px) {
-            .sidebar {
-                display: block;
-            }
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 16px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            margin-bottom: 4px;
-        }
-
-        .sidebar-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-item i {
-            margin-right: 24px;
-            color: var(--text-light);
-        }
-
-        .sidebar-item.active {
-            background-color: rgba(255, 0, 0, 0.1);
-            font-weight: 500;
-        }
-
-        .sidebar-item.active i {
-            color: var(--primary-color);
         }
 
         #addLinkSection {
@@ -345,22 +303,6 @@
             font-size: 14px;
         }
 
-        /* Mobile menu */
-        .mobile-menu-btn {
-            display: block;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 20px;
-            margin-right: 16px;
-        }
-
-        @media (min-width: 800px) {
-            .mobile-menu-btn {
-                display: none;
-            }
-        }
-
         /* Loading animation */
         .loading {
             display: flex;
@@ -385,38 +327,14 @@
 <body>
     <div id="app">
         <header>
-            <div class="header-left">
-                <button class="mobile-menu-btn">
-                    <i class="material-icons">menu</i>
-                </button>
-                <div class="logo">
-                    <i class="material-icons">play_circle_filled</i>
-                    <span>YoyoLinks</span>
-                </div>
+            <div class="logo">
+                <i class="material-icons">play_circle_filled</i>
+                <span>YoyoLinks</span>
             </div>
         </header>
         
         <main>
             <div class="content">
-                <div class="sidebar">
-                    <div class="sidebar-item active">
-                        <i class="material-icons">home</i>
-                        <span>Home</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <i class="material-icons">explore</i>
-                        <span>Explore</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <i class="material-icons">subscriptions</i>
-                        <span>Subscriptions</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <i class="material-icons">library_add</i>
-                        <span>Library</span>
-                    </div>
-                </div>
-                
                 <div class="main-content">
                     <section id="addLinkSection">
                         <h2 class="section-title">
@@ -457,56 +375,60 @@
                 <i class="material-icons">brightness_4</i>
                 <span>Toggle Theme</span>
             </button>
-            <p class="copyright">Created by You - <span id="currentYear"></span></p>
+            <p class="copyright">Created with YoyoLinks - <span id="currentYear"></span></p>
         </footer>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
     <script>
-        // Simple in-memory database for demo purposes
-        let linksDB = JSON.parse(localStorage.getItem('yoyolinks')) || [];
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQ4TXYzg12eryWDnovWPCqUxfSOZWQIck",
+            authDomain: "yoyolinks-d64c6.firebaseapp.com",
+            projectId: "yoyolinks-d64c6",
+            storageBucket: "yoyolinks-d64c6.firebasestorage.app",
+            messagingSenderId: "135608837798",
+            appId: "1:135608837798:web:a7ab3bff6f03756f413667",
+            measurementId: "G-VPXQSWWF9B"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         let currentFilter = 'trending';
-        
-        // DOM Elements
-        const linkForm = document.getElementById('linkForm');
-        const linksContainer = document.getElementById('linksContainer').querySelector('.links-grid');
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const sidebar = document.querySelector('.sidebar');
-        
+
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             // Set current year in footer
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
             // Load links
-            renderLinks();
+            loadLinks();
             
             // Setup event listeners
-            linkForm.addEventListener('submit', handleAddLink);
+            document.getElementById('linkForm').addEventListener('submit', handleAddLink);
             
-            filterButtons.forEach(btn => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    filterButtons.forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     currentFilter = btn.dataset.filter;
-                    renderLinks();
+                    loadLinks();
                 });
             });
             
             // Theme toggle
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             
-            // Mobile menu toggle
-            mobileMenuBtn.addEventListener('click', () => {
-                sidebar.style.display = sidebar.style.display === 'block' ? 'none' : 'block';
-            });
-            
             // Check for saved theme
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
         });
-        
-        // Functions
+
+        // Handle adding new link
         function handleAddLink(e) {
             e.preventDefault();
             
@@ -520,128 +442,149 @@
             
             // Create new link
             const newLink = {
-                id: Date.now().toString(),
                 title,
                 url,
                 code: Math.floor(100000 + Math.random() * 900000), // 6-digit code
                 views: 0,
                 likes: 0,
                 dislikes: 0,
-                createdAt: new Date().toISOString(),
-                lastReactionTime: 0
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
             // Add to database
-            linksDB.push(newLink);
-            saveToLocalStorage();
-            
-            // Reset form and refresh view
-            linkForm.reset();
-            renderLinks();
-            
-            alert(`Link added! Share with code: ${newLink.code}`);
+            db.collection('links').add(newLink)
+                .then(() => {
+                    alert(`Link added! Share with code: ${newLink.code}`);
+                    document.getElementById('linkForm').reset();
+                    loadLinks();
+                })
+                .catch(error => {
+                    alert('Error adding link: ' + error.message);
+                });
         }
-        
-        function renderLinks() {
-            // Filter and sort links
-            let filteredLinks = [...linksDB];
+
+        // Load links from Firestore
+        function loadLinks() {
+            let query = db.collection('links');
             
             switch(currentFilter) {
                 case 'recent':
-                    filteredLinks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    query = query.orderBy('createdAt', 'desc');
                     break;
                 case 'popular':
-                    filteredLinks.sort((a, b) => b.likes - a.likes);
+                    query = query.orderBy('likes', 'desc');
                     break;
                 default: // trending
-                    filteredLinks.sort((a, b) => b.views - a.views);
+                    query = query.orderBy('views', 'desc');
             }
             
-            // Render links
-            if (filteredLinks.length === 0) {
-                linksContainer.innerHTML = '<div class="link-placeholder" style="grid-column:1/-1;text-align:center;padding:40px;"><p>No links available yet. Add one above!</p></div>';
-                return;
-            }
-            
-            linksContainer.innerHTML = filteredLinks.map(link => `
-                <div class="link-card" data-id="${link.id}">
-                    <div class="link-thumbnail">
-                        <i class="material-icons">link</i>
+            query.limit(20).get()
+                .then(snapshot => {
+                    const linksContainer = document.getElementById('linksContainer').querySelector('.links-grid');
+                    linksContainer.innerHTML = '';
+                    
+                    if (snapshot.empty) {
+                        linksContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><p>No links available yet. Add one above!</p></div>';
+                        return;
+                    }
+                    
+                    snapshot.forEach(doc => {
+                        const link = doc.data();
+                        const linkElement = createLinkElement(link, doc.id);
+                        linksContainer.appendChild(linkElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading links: ', error);
+                });
+        }
+
+        // Create link card element
+        function createLinkElement(link, id) {
+            const linkElement = document.createElement('div');
+            linkElement.className = 'link-card';
+            linkElement.setAttribute('data-id', id);
+            linkElement.innerHTML = `
+                <div class="link-thumbnail">
+                    <i class="material-icons">link</i>
+                </div>
+                <div class="link-info">
+                    <h3 class="link-title">${link.title}</h3>
+                    <p class="link-url">
+                        <a href="${link.url}" target="_blank" onclick="trackView('${id}')">${link.url}</a>
+                    </p>
+                    <div class="link-stats">
+                        <span><i class="material-icons">visibility</i> ${link.views}</span>
+                        <span><i class="material-icons">favorite</i> ${link.likes}</span>
+                        <span><i class="material-icons">thumb_down</i> ${link.dislikes}</span>
+                        <span><i class="material-icons">code</i> ${link.code}</span>
                     </div>
-                    <div class="link-info">
-                        <h3 class="link-title">${link.title}</h3>
-                        <p class="link-url">
-                            <a href="${link.url}" target="_blank" onclick="trackView('${link.id}')">${link.url}</a>
-                        </p>
-                        <div class="link-stats">
-                            <span><i class="material-icons">visibility</i> ${link.views}</span>
-                            <span><i class="material-icons">favorite</i> ${link.likes}</span>
-                            <span><i class="material-icons">thumb_down</i> ${link.dislikes}</span>
-                            <span><i class="material-icons">code</i> ${link.code}</span>
-                        </div>
-                        <div class="link-actions">
-                            <button class="action-btn like" onclick="handleReaction('${link.id}', 'likes')">
-                                <i class="material-icons">thumb_up</i>
-                                <span>Like</span>
-                            </button>
-                            <button class="action-btn dislike" onclick="handleReaction('${link.id}', 'dislikes')">
-                                <i class="material-icons">thumb_down</i>
-                                <span>Dislike</span>
-                            </button>
-                            <button class="action-btn" onclick="shareLink('${link.code}')">
-                                <i class="material-icons">share</i>
-                                <span>Share</span>
-                            </button>
-                        </div>
+                    <div class="link-actions">
+                        <button class="action-btn like" onclick="handleReaction('${id}', 'likes')">
+                            <i class="material-icons">thumb_up</i>
+                            <span>Like</span>
+                        </button>
+                        <button class="action-btn dislike" onclick="handleReaction('${id}', 'dislikes')">
+                            <i class="material-icons">thumb_down</i>
+                            <span>Dislike</span>
+                        </button>
+                        <button class="action-btn" onclick="shareLink('${link.code}')">
+                            <i class="material-icons">share</i>
+                            <span>Share</span>
+                        </button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            return linkElement;
         }
-        
+
+        // Track view count
         function trackView(linkId) {
-            const link = linksDB.find(l => l.id === linkId);
-            if (link) {
-                link.views++;
-                saveToLocalStorage();
-            }
-        }
-        
-        function handleReaction(linkId, type) {
-            const link = linksDB.find(l => l.id === linkId);
-            if (!link) return;
-            
-            const now = Date.now();
-            
-            // Simple 5-minute cooldown (stored per link for simplicity)
-            if (now - link.lastReactionTime < 300000) {
-                alert('You can only react once every 5 minutes');
-                return;
-            }
-            
-            link[type]++;
-            link.lastReactionTime = now;
-            saveToLocalStorage();
-            renderLinks();
-            
-            // Update the button appearance
-            const buttons = document.querySelectorAll(`.link-card[data-id="${linkId}"] .action-btn`);
-            buttons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.classList.contains(type)) {
-                    btn.classList.add('active');
-                }
+            const linkRef = db.collection('links').doc(linkId);
+            db.runTransaction(transaction => {
+                return transaction.get(linkRef).then(doc => {
+                    if (!doc.exists) {
+                        throw "Document does not exist!";
+                    }
+                    const newViews = doc.data().views + 1;
+                    transaction.update(linkRef, { views: newViews });
+                });
+            }).then(() => {
+                loadLinks();
+            }).catch(error => {
+                console.log("View tracking failed: ", error);
             });
         }
-        
+
+        // Handle like/dislike reactions
+        function handleReaction(linkId, type) {
+            const linkRef = db.collection('links').doc(linkId);
+            db.runTransaction(transaction => {
+                return transaction.get(linkRef).then(doc => {
+                    if (!doc.exists) {
+                        throw "Document does not exist!";
+                    }
+                    const newCount = doc.data()[type] + 1;
+                    transaction.update(linkRef, { [type]: newCount });
+                });
+            }).then(() => {
+                loadLinks();
+            }).catch(error => {
+                console.log("Reaction failed: ", error);
+            });
+        }
+
+        // Share link function
         function shareLink(code) {
             const url = `${window.location.origin}${window.location.pathname}?code=${code}`;
             navigator.clipboard.writeText(url)
                 .then(() => alert('Link copied to clipboard!'))
                 .catch(() => prompt('Copy this link:', url));
         }
-        
+
+        // Toggle theme
         function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
@@ -650,19 +593,18 @@
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.querySelector('span').textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
         }
-        
-        function saveToLocalStorage() {
-            localStorage.setItem('yoyolinks', JSON.stringify(linksDB));
-        }
-        
+
         // Check for shared code in URL
         const urlParams = new URLSearchParams(window.location.search);
         const sharedCode = urlParams.get('code');
         if (sharedCode) {
-            const sharedLink = linksDB.find(l => l.code == sharedCode);
-            if (sharedLink) {
-                alert(`Shared Link: ${sharedLink.title}\n${sharedLink.url}`);
-            }
+            db.collection('links').where('code', '==', parseInt(sharedCode)).get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        const link = snapshot.docs[0].data();
+                        alert(`Shared Link: ${link.title}\n${link.url}`);
+                    }
+                });
         }
     </script>
 </body>
