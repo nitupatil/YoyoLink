@@ -13,8 +13,56 @@
 </head>
 <body>
     <div id="app">
-        <!-- Your app content will go here -->
+        <header>
+            <h1>YoyoLinks</h1>
+            <div class="auth-buttons">
+                <button id="loginBtn">Login</button>
+                <button id="signupBtn">Sign Up</button>
+                <button id="logoutBtn" style="display:none">Logout</button>
+            </div>
+        </header>
+        
+        <main>
+            <section id="addLinkSection">
+                <h2>Add New Link</h2>
+                <form id="linkForm">
+                    <input type="text" id="linkTitle" placeholder="Link Title" required>
+                    <input type="url" id="linkUrl" placeholder="https://example.com" required>
+                    <button type="submit">Shorten & Share</button>
+                </form>
+            </section>
+            
+            <section id="linksSection">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search links...">
+                    <button id="searchBtn">Search</button>
+                </div>
+                
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="trending">Trending Now</button>
+                    <button class="filter-btn" data-filter="recent">Most Recent</button>
+                    <button class="filter-btn" data-filter="popular">Most Popular</button>
+                </div>
+                
+                <div id="linksContainer">
+                    <!-- Links will be dynamically inserted here by JavaScript -->
+                    <div class="link-placeholder">
+                        <p>Loading links or no links available...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <button id="themeToggle">Toggle Dark Mode</button>
+            <p>Created by <span id="currentYear"></span></p>
+        </footer>
     </div>
+    
     <script src="app.js"></script>
+    <script>
+        // Display current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
